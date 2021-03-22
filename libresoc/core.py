@@ -50,6 +50,9 @@ def make_pad(res, dirn, name, suffix, cpup, iop):
 def get_field(rec, name):
     for f in rec.layout:
         f = f[0]
+        print ("get_field", f, name)
+    for f in rec.layout:
+        f = f[0]
         if f.endswith(name):
             return getattr(rec, f)
 
@@ -64,6 +67,7 @@ def make_jtag_ioconn(res, pin, cpupads, iopads):
     else:
         cpu = cpupads[fn]
         io = iopads[fn]
+    print ("make_jtag_ioconn", scan_idx)
     print ("cpupads", cpupads)
     print ("iopads", iopads)
     print ("pin", fn, pin, iotype, pin_name)
@@ -107,18 +111,26 @@ def make_jtag_ioconn(res, pin, cpupads, iopads):
         if fn == 'gpio': # sigh decode GPIO special-case
             idx = int(pin[1:])
             oe_idx = idx
-        elif fn == 'sdr': # sigh
+            pfx = ''
+        elif fn.startswith('sd') and pin.startswith('data'):
+            idx = int(pin[-1])
+            oe_idx = 0
+            pfx = pin[:-1]+"_"
+        elif fn == 'sdr':
             idx = int(pin.split('_')[-1])
             oe_idx = 0
+            pfx = pin.split('_')[0]+"_"
         else:
             idx = 0
             oe_idx = 0
+            pfx = pin+"_"
         print ("gpio tri", fn, pin, iotype, pin_name, scan_idx, idx)
-        cpup, iop = get_field(cpu, "i")[idx], get_field(io, "i")[idx]
-        make_pad(res, True, name, "i", cpup, iop)
-        cpup, iop = get_field(cpu, "o")[idx], get_field(io, "o")[idx]
+        cpup, iop = get_field(cpu, pfx+"i")[idx], get_field(io, pfx+"i")[idx]
+        make_pad(res, False, name, "i", cpup, iop)
+        cpup, iop = get_field(cpu, pfx+"o")[idx], get_field(io, pfx+"o")[idx]
         make_pad(res, True, name, "o", cpup, iop)
-        cpup, iop = get_field(cpu, "oe")[oe_idx], get_field(io, "oe")[oe_idx]
+        cpup, iop = get_field(cpu, pfx+"oe")[oe_idx], \
+                    get_field(io, pfx+"oe")[oe_idx]
         make_pad(res, True, name, "oe", cpup, iop)
 
     if iotype in (IOType.In, IOType.InTriOut):
