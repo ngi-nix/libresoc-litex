@@ -14,7 +14,7 @@ from litex.build.generic_platform import ConstraintManager
 
 
 CPU_VARIANTS = ["standard", "standard32", "standardjtag",
-                "standardjtagtestgpio", "ls180",
+                "standardjtagtestgpio", "ls180", "ls180sram4k",
                 "standardjtagnoirq"]
 
 
@@ -41,7 +41,7 @@ def make_wb_slave(prefix, obj, simple=False):
     return res
 
 def make_pad(res, dirn, name, suffix, cpup, iop):
-    cpud, iod = ('i', 'o') if dirn else ('o', 'i')
+    cpud, iod = ('o', 'o') if dirn else ('i', 'i')
     cname = '%s_%s__core__%s' % (cpud, name, suffix)
     pname = '%s_%s__pad__%s' % (iod, name, suffix)
     print ("make pad", name, dirn, cpud, iod, cname, pname, suffix, cpup, iop)
@@ -105,7 +105,7 @@ def make_jtag_ioconn(res, pin, cpupads, iopads):
     elif iotype == IOType.In:
         # input to the pad is routed through C4M JTAG and so
         # is an *OUTPUT* into core.  ls180soc connects this to "real" peripheral
-        make_pad(res, True, name, "i", cpup, iop)
+        make_pad(res, False, name, "i", cpup, iop)
 
     elif iotype == IOType.InTriOut:
         if fn == 'gpio': # sigh decode GPIO special-case
@@ -192,15 +192,15 @@ class LibreSoC(CPU):
         self.xics_icp = icp = wb.Interface(data_width=32, adr_width=30)
         self.xics_ics = ics = wb.Interface(data_width=32, adr_width=30)
 
-        jtag_en = ('jtag' in variant) or variant == 'ls180'
+        jtag_en = ('jtag' in variant) or ('ls180' in variant)
 
         if "testgpio" in variant:
             self.simple_gpio = gpio = wb.Interface(data_width=32, adr_width=30)
         if jtag_en:
             self.jtag_wb = jtag_wb = wb.Interface(data_width=64, adr_width=29)
 
-        if "sram4k" in variant or variant == 'ls180':
-            self.srams = srams = []
+        self.srams = srams = []
+        if "sram4k" in variant:
             for i in range(4):
                 srams.append(wb.Interface(data_width=64, adr_width=29))
 
@@ -261,7 +261,7 @@ class LibreSoC(CPU):
             ))
 
         # add clock select, pll output
-        if variant == "ls180":
+        if "ls180" in variant:
             self.pll_18_o = Signal()
             self.clk_sel = Signal(2)
             self.pll_lck_o = Signal()
@@ -278,7 +278,7 @@ class LibreSoC(CPU):
             self.cpu_params.update(make_wb_slave("gpio_wb", gpio))
         if jtag_en:
             self.cpu_params.update(make_wb_bus("jtag_wb", jtag_wb, simple=True))
-        if "sram4k" in variant or variant == 'ls180':
+        if "sram4k" in variant:
             for i, sram in enumerate(srams):
                 self.cpu_params.update(make_wb_slave("sram4k_%d_wb" % i,
                                                      sram, simple=True))
@@ -289,7 +289,7 @@ class LibreSoC(CPU):
         self.cpu_params['i_dbus__cti'] = 0
         self.cpu_params['i_dbus__bte'] = 0
 
-        if variant == 'ls180':
+        if "ls180" in variant:
             # urr yuk.  have to expose iopads / pins from core to litex
             # then back again.  cut _some_ of that out by connecting
             self.padresources = io()

@@ -99,27 +99,40 @@ class I2CMaster(Module, AutoCSR):
 
 
 class GPIOTristateASIC(Module, AutoCSR):
-    def __init__(self, pads, prange=None):
-        nbits     = len(pads.oe) # hack
+    def __init__(self, name, pads, prange=None):
+        if prange is None:
+            prange = range(nbits)
+        nbits     = len(prange)
+
         self._oe  = CSRStorage(nbits, description="GPIO Tristate(s) Control.")
         self._in  = CSRStatus(nbits,  description="GPIO Input(s) Status.")
         self._out = CSRStorage(nbits, description="GPIO Ouptut(s) Control.")
 
         # # #
 
-        _pads = Record( (("i",  nbits),
-                         ("o",  nbits),
-                         ("oe", nbits)))
-        self.comb += _pads.i.eq(pads.i)
-        self.comb += pads.o.eq(_pads.o)
-        self.comb += pads.oe.eq(_pads.oe)
+        _pads = Record( ((name+"i",  nbits),
+                         (name+"o",  nbits),
+                         (name+"oe", nbits)))
+        _o = getattr(_pads, name+"o")
+        _oe = getattr(_pads, name+"oe")
+        _i = getattr(_pads, name+"i")
+        for j, i in enumerate(prange):
+            self.comb += _i[j].eq(pads.i[i])
+            self.comb += pads.o[i].eq(_o[j])
+            self.comb += pads.oe[i].eq(_oe[j])
 
-        self.comb += _pads.oe.eq(self._oe.storage)
-        self.comb += _pads.o.eq(self._out.storage)
-        if prange is None:
-            prange = range(nbits)
-        for i in prange:
-            self.specials += MultiReg(_pads.i[i], self._in.status[i])
+        clk = ClockSignal()
+        o = self._out.storage
+        oe = self._oe.storage
+        i = self._in.status
+        for j in range(nbits):
+            self.specials += SDROutput(clk=clk, i=oe[j], o=_oe[j])
+            self.specials += SDROutput(clk=clk, i=o[j], o=_o[j])
+            self.specials += SDRInput(clk=clk, i=_i[j], o=i[j])
+        #for i in range(nbits):
+            #self.comb += _pads.oe[i].eq(self._oe.storage[i])
+            #self.comb += _pads.o[i].eq(self._out.storage[i])
+            #self.specials += MultiReg(_pads.i[i], self._in.status[i])
 
 # SDCard PHY IO -------------------------------------------------------
 
@@ -284,14 +297,18 @@ class LibreSoCSim(SoCCore):
             sdram_data_width      = 16,
             irq_reserved_irqs = {'uart': 0},
             platform='sim',
+            dff_srams=5,
+            srams_4k=4,
             ):
         assert cpu in ["libresoc", "microwatt"]
         sys_clk_freq = int(50e6)
 
+        platform_name = platform
         if platform == 'sim':
             platform     = Platform()
+            self.platform.name = 'ls180'
             uart_name = "sim"
-        elif platform == 'ls180':
+        elif 'ls180' in platform:
             platform     = LS180Platform()
             uart_name = "uart"
 
@@ -322,11 +339,19 @@ class LibreSoCSim(SoCCore):
             self.csr_map["uart"] = 4
 
         self.mem_map["main_ram"] = 0x90000000
-        self.mem_map["sram"] = 0x00000000
-        self.mem_map["sram1"] = 0x00000200
-        self.mem_map["sram2"] = 0x00000400
-        self.mem_map["sram3"] = 0x00000600
-        self.mem_map["sram4"] = 0x00000800
+        if dff_srams == 5:
+            self.mem_map["sram"] = 0x00000000
+            self.mem_map["sram1"] = 0x00000200
+            self.mem_map["sram2"] = 0x00000400
+            self.mem_map["sram3"] = 0x00000600
+            self.mem_map["sram4"] = 0x00000800
+            sram_size = 0x200
+        else:
+            sram_size = 0x80 # ridiculously small
+            if "sram4k" not in variant:
+                sram_size = 0x200 # no 4k SRAMs, make slightly bigger
+            self.mem_map["sram"] = 0x00000000
+            self.mem_map["sram1"] = 0x00000700
         self.mem_map["sram4k_0"] = 0x00001000
         self.mem_map["sram4k_1"] = 0x00002000
         self.mem_map["sram4k_2"] = 0x00003000
@@ -349,18 +374,22 @@ class LibreSoCSim(SoCCore):
             sdram_data_width      = sdram_data_width,
             integrated_rom_size      = 0, # if ram_fname else 0x10000,
             #integrated_sram_size     = 0x1000, - problem with yosys ABC
-            integrated_sram_size     = 0x200,
+            integrated_sram_size     = sram_size,
             #integrated_main_ram_init  = ram_init,
             integrated_main_ram_size = 0x00000000 if with_sdram \
                                         else 0x10000000 , # 256MB
             )
-        self.platform.name = "ls180"
 
-        # add 4 more 4k integrated SRAMs
-        self.add_ram("sram1", self.mem_map["sram1"], 0x200)
-        self.add_ram("sram2", self.mem_map["sram2"], 0x200)
-        self.add_ram("sram3", self.mem_map["sram3"], 0x200)
-        self.add_ram("sram4", self.mem_map["sram4"], 0x200)
+        self.platform.name = platform_name
+
+        if dff_srams == 5:
+            # add 4 more 4k integrated SRAMs
+            self.add_ram("sram1", self.mem_map["sram1"], 0x200)
+            self.add_ram("sram2", self.mem_map["sram2"], 0x200)
+            self.add_ram("sram3", self.mem_map["sram3"], 0x200)
+            self.add_ram("sram4", self.mem_map["sram4"], 0x200)
+        else:
+            self.add_ram("sram1", self.mem_map["sram1"], 0x80) # tiny!
 
         # SDR SDRAM ----------------------------------------------
         if False: # not self.integrated_main_ram_size:
@@ -458,25 +487,26 @@ class LibreSoCSim(SoCCore):
 
         # GPIOs (bi-directional)
         gpio_core_pads = self.cpu.cpupads['gpio']
-        self.submodules.gpio = GPIOTristateASIC(gpio_core_pads, range(8))
-        self.add_csr("gpio")
+        self.submodules.gpio0 = GPIOTristateASIC("gpio0", gpio_core_pads,
+                                                 range(8))
+        self.add_csr("gpio0")
 
-        self.submodules.gpio = GPIOTristateASIC(gpio_core_pads, range(8,16))
+        self.submodules.gpio1 = GPIOTristateASIC("gpio1", gpio_core_pads,
+                                                 range(8, 16))
         self.add_csr("gpio1")
 
         # SPI Master
         print ("cpupadkeys", self.cpu.cpupads.keys())
-        self.submodules.spimaster = SPIMaster(
-            pads         = self.cpu.cpupads['mspi1'],
-            data_width   = 8,
-            sys_clk_freq = sys_clk_freq,
-            spi_clk_freq = 8e6,
-        )
-        self.add_csr("spimaster")
+        sd_clk_freq = 8e6
+        pads = self.cpu.cpupads['mspi0']
+        spimaster = SPIMaster(pads, 8, self.sys_clk_freq, sd_clk_freq)
+        spimaster.add_clk_divider()
+        setattr(self.submodules, 'spimaster', spimaster)
+        self.add_csr('spimaster')
 
         # SPI SDCard (1 wide)
         spi_clk_freq = 400e3
-        pads = self.cpu.cpupads['mspi0']
+        pads = self.cpu.cpupads['mspi1']
         spisdcard = SPIMaster(pads, 8, self.sys_clk_freq, spi_clk_freq)
         spisdcard.add_clk_divider()
         setattr(self.submodules, 'spisdcard', spisdcard)
@@ -552,7 +582,7 @@ class LibreSoCSim(SoCCore):
         if not debug:
             return
 
-        jtag_en = ('jtag' in variant) or variant == 'ls180'
+        jtag_en = ('jtag' in variant) or ('ls180' in variant)
 
         # setup running of DMI FSM
         dmi_addr = Signal(4)
@@ -830,13 +860,17 @@ def main():
                         help="Cycle to start FST tracing")
     parser.add_argument("--trace-end",    default=-1,
                         help="Cycle to end FST tracing")
+    parser.add_argument("--num-srams",    default=5,
+                        help="number of srams")
     parser.add_argument("--build", action="store_true", help="Build bitstream")
     args = parser.parse_args()
 
+    print ("number of SRAMs", args.num_srams)
 
-    if args.platform == 'ls180':
+    if 'ls180' in args.platform:
         soc = LibreSoCSim(cpu=args.cpu, debug=args.debug,
-                          platform=args.platform)
+                          platform=args.platform,
+                          dff_srams=args.num_srams)
         builder = Builder(soc, compile_gateware = True)
         builder.build(run         = True)
         os.chdir("../")
@@ -847,7 +881,8 @@ def main():
 
         for i in range(2):
             soc = LibreSoCSim(cpu=args.cpu, debug=args.debug,
-                              platform=args.platform)
+                              platform=args.platform,
+                              dff_srams=args.num_srams)
             builder = Builder(soc, compile_gateware = i!=0)
             builder.build(sim_config=sim_config,
                 run         = i!=0,
