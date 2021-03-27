@@ -497,25 +497,27 @@ class LibreSoCSim(SoCCore):
 
         # SPI Master
         print ("cpupadkeys", self.cpu.cpupads.keys())
-        sd_clk_freq = 8e6
-        pads = self.cpu.cpupads['mspi0']
-        spimaster = SPIMaster(pads, 8, self.sys_clk_freq, sd_clk_freq)
-        spimaster.add_clk_divider()
-        setattr(self.submodules, 'spimaster', spimaster)
-        self.add_csr('spimaster')
+        if hasattr(self.cpu.cpupads, 'mspi0'):
+            sd_clk_freq = 8e6
+            pads = self.cpu.cpupads['mspi0']
+            spimaster = SPIMaster(pads, 8, self.sys_clk_freq, sd_clk_freq)
+            spimaster.add_clk_divider()
+            setattr(self.submodules, 'spimaster', spimaster)
+            self.add_csr('spimaster')
 
-        # SPI SDCard (1 wide)
-        spi_clk_freq = 400e3
-        pads = self.cpu.cpupads['mspi1']
-        spisdcard = SPIMaster(pads, 8, self.sys_clk_freq, spi_clk_freq)
-        spisdcard.add_clk_divider()
-        setattr(self.submodules, 'spisdcard', spisdcard)
-        self.add_csr('spisdcard')
+        if hasattr(self.cpu.cpupads, 'mspi1'):
+            # SPI SDCard (1 wide)
+            spi_clk_freq = 400e3
+            pads = self.cpu.cpupads['mspi1']
+            spisdcard = SPIMaster(pads, 8, self.sys_clk_freq, spi_clk_freq)
+            spisdcard.add_clk_divider()
+            setattr(self.submodules, 'spisdcard', spisdcard)
+            self.add_csr('spisdcard')
 
         # EINTs - very simple, wire up top 3 bits to ls180 "eint" pins
         eintpads = self.cpu.cpupads['eint']
         print ("eintpads", eintpads)
-        self.comb += self.cpu.interrupt[12:16].eq(eintpads)
+        self.comb += self.cpu.interrupt[13:16].eq(eintpads)
 
         # JTAG
         jtagpads = platform.request("jtag")
@@ -535,11 +537,12 @@ class LibreSoCSim(SoCCore):
             self.sync += self.dummy[i].eq(self.nc[i] | self.cpu.interrupt[0])
 
         # PWM
-        pwmpads = self.cpu.cpupads['pwm']
-        for i in range(2):
-            name = "pwm%d" % i
-            setattr(self.submodules, name, PWM(pwmpads[i]))
-            self.add_csr(name)
+        if hasattr(self.cpu.cpupads, 'pwm'):
+            pwmpads = self.cpu.cpupads['pwm']
+            for i in range(2):
+                name = "pwm%d" % i
+                setattr(self.submodules, name, PWM(pwmpads[i]))
+                self.add_csr(name)
 
         # I2C Master
         i2c_core_pads = self.cpu.cpupads['mtwi']
@@ -548,35 +551,36 @@ class LibreSoCSim(SoCCore):
 
         # SDCard -----------------------------------------------------
 
-        # Emulator / Pads
-        sdcard_pads = self.cpu.cpupads['sd0']
+        if hasattr(self.cpu.cpupads, 'sd0'):
+            # Emulator / Pads
+            sdcard_pads = self.cpu.cpupads['sd0']
 
-        # Core
-        self.submodules.sdphy  = SDPHY(sdcard_pads,
-                                       self.platform.device, self.clk_freq)
-        self.submodules.sdcore = SDCore(self.sdphy)
-        self.add_csr("sdphy")
-        self.add_csr("sdcore")
+            # Core
+            self.submodules.sdphy  = SDPHY(sdcard_pads,
+                                           self.platform.device, self.clk_freq)
+            self.submodules.sdcore = SDCore(self.sdphy)
+            self.add_csr("sdphy")
+            self.add_csr("sdcore")
 
-        # Block2Mem DMA
-        bus = wishbone.Interface(data_width=self.bus.data_width,
-                                 adr_width=self.bus.address_width)
-        self.submodules.sdblock2mem = SDBlock2MemDMA(bus=bus,
-                                    endianness=self.cpu.endianness)
-        self.comb += self.sdcore.source.connect(self.sdblock2mem.sink)
-        dma_bus = self.bus if not hasattr(self, "dma_bus") else self.dma_bus
-        dma_bus.add_master("sdblock2mem", master=bus)
-        self.add_csr("sdblock2mem")
+            # Block2Mem DMA
+            bus = wishbone.Interface(data_width=self.bus.data_width,
+                                     adr_width=self.bus.address_width)
+            self.submodules.sdblock2mem = SDBlock2MemDMA(bus=bus,
+                                        endianness=self.cpu.endianness)
+            self.comb += self.sdcore.source.connect(self.sdblock2mem.sink)
+            dma_bus = self.bus if not hasattr(self, "dma_bus") else self.dma_bus
+            dma_bus.add_master("sdblock2mem", master=bus)
+            self.add_csr("sdblock2mem")
 
-        # Mem2Block DMA
-        bus = wishbone.Interface(data_width=self.bus.data_width,
-                                 adr_width=self.bus.address_width)
-        self.submodules.sdmem2block = SDMem2BlockDMA(bus=bus,
-                                            endianness=self.cpu.endianness)
-        self.comb += self.sdmem2block.source.connect(self.sdcore.sink)
-        dma_bus = self.bus if not hasattr(self, "dma_bus") else self.dma_bus
-        dma_bus.add_master("sdmem2block", master=bus)
-        self.add_csr("sdmem2block")
+            # Mem2Block DMA
+            bus = wishbone.Interface(data_width=self.bus.data_width,
+                                     adr_width=self.bus.address_width)
+            self.submodules.sdmem2block = SDMem2BlockDMA(bus=bus,
+                                                endianness=self.cpu.endianness)
+            self.comb += self.sdmem2block.source.connect(self.sdcore.sink)
+            dma_bus = self.bus if not hasattr(self, "dma_bus") else self.dma_bus
+            dma_bus.add_master("sdmem2block", master=bus)
+            self.add_csr("sdmem2block")
 
         # Debug ---------------------------------------------------------------
         if not debug:

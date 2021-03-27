@@ -41,7 +41,7 @@ def make_wb_slave(prefix, obj, simple=False):
     return res
 
 def make_pad(res, dirn, name, suffix, cpup, iop):
-    cpud, iod = ('o', 'o') if dirn else ('i', 'i')
+    cpud, iod = ('i', 'o') if dirn else ('o', 'i')
     cname = '%s_%s__core__%s' % (cpud, name, suffix)
     pname = '%s_%s__pad__%s' % (iod, name, suffix)
     print ("make pad", name, dirn, cpud, iod, cname, pname, suffix, cpup, iop)
@@ -125,10 +125,15 @@ def make_jtag_ioconn(res, pin, cpupads, iopads):
             oe_idx = 0
             pfx = pin+"_"
         print ("gpio tri", fn, pin, iotype, pin_name, scan_idx, idx)
-        cpup, iop = get_field(cpu, pfx+"i")[idx], get_field(io, pfx+"i")[idx]
+        # i pads
+        cpup, iop = get_field(cpu, pfx+"i")[idx], \
+                    get_field(io, pfx+"i")[idx]
         make_pad(res, False, name, "i", cpup, iop)
-        cpup, iop = get_field(cpu, pfx+"o")[idx], get_field(io, pfx+"o")[idx]
+        # o pads
+        cpup, iop = get_field(cpu, pfx+"o")[idx], \
+                    get_field(io, pfx+"o")[idx]
         make_pad(res, True, name, "o", cpup, iop)
+        # oe pads
         cpup, iop = get_field(cpu, pfx+"oe")[oe_idx], \
                     get_field(io, pfx+"oe")[oe_idx]
         make_pad(res, True, name, "oe", cpup, iop)
@@ -297,8 +302,12 @@ class LibreSoC(CPU):
             self.cpupads = {}
             iopads = {}
             litexmap = {}
-            subset = {'uart', 'mtwi', 'eint', 'gpio', 'mspi0', 'mspi1',
-                      'pwm', 'sd0', 'sdr'}
+            subset = {'uart', 'mtwi', 'eint', 'mspi0',
+                            'sdr'}
+            subset.add('gpio')
+            #subset.add('pwm')
+            #subset.add('mspi1')
+            #subset.add('sd0')
             for periph in subset:
                 origperiph = periph
                 num = None
@@ -317,13 +326,13 @@ class LibreSoC(CPU):
                 elif periph == 'sd':
                     periph, num = 'sdcard', None
                 litexmap[origperiph] = (periph, num)
-                self.cpupads[origperiph] = platform.request(periph, num)
-                iopads[origperiph] = self.pad_cm.request(periph, num)
+                self.cpupads[origperiph] = self.pad_cm.request(periph, num)
+                iopads[origperiph] = platform.request(periph, num)
                 if periph == 'sdram':
                     # special-case sdram clock
-                    ck = platform.request("sdram_clock")
-                    self.cpupads['sdram_clock'] = ck
                     ck = self.pad_cm.request("sdram_clock")
+                    self.cpupads['sdram_clock'] = ck
+                    ck = platform.request("sdram_clock")
                     iopads['sdram_clock'] = ck
 
             pinset = get_pinspecs(subset=subset)
