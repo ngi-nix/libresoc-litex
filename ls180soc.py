@@ -467,7 +467,8 @@ class LibreSoCSim(SoCCore):
 
             # SDRAM clock
             sys_clk = ClockSignal()
-            sdr_clk = self.cpu.cpupads['sdram_clock']
+            #sdr_clk = self.cpu.cpupads['sdram_clock']
+            sdr_clk = sdram_pads.clock
             #self.specials += DDROutput(1, 0, , sdram_clk)
             self.specials += SDROutput(clk=sys_clk, i=sys_clk, o=sdr_clk)
 
@@ -517,7 +518,10 @@ class LibreSoCSim(SoCCore):
         # EINTs - very simple, wire up top 3 bits to ls180 "eint" pins
         eintpads = self.cpu.cpupads['eint']
         print ("eintpads", eintpads)
-        self.comb += self.cpu.interrupt[13:16].eq(eintpads)
+        self.eint_tmp = Signal(len(eintpads))
+        for i in range(len(eintpads)):
+            self.comb += self.cpu.interrupt[13+i].eq(self.eint_tmp[i])
+            self.comb += self.eint_tmp[i].eq(getattr(eintpads, "%d" % i))
 
         # JTAG
         jtagpads = platform.request("jtag")

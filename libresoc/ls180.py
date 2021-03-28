@@ -29,6 +29,13 @@ def make_uart(name, num):
         Subsignal("rx", Pins("M1"), IOStandard("LVCMOS33"))
     )
 
+def make_eint(name, num):
+    return (name, num,
+        Subsignal("0", Pins("E0"), IOStandard("LVCMOS33")),
+        Subsignal("1", Pins("E1"), IOStandard("LVCMOS33")),
+        Subsignal("2", Pins("E2"), IOStandard("LVCMOS33")),
+    )
+
 def make_gpio(name, num, n_gpio):
     pins = []
     for i in range(n_gpio):
@@ -103,7 +110,7 @@ def io():
         ),
 
         # SDRAM: 39 pins
-        ("sdram_clock", 0, Pins("F19"), IOStandard("LVCMOS33")),
+        #("sdram_clock", 0, Pins("F19"), IOStandard("LVCMOS33")),
         ("sdram", 0,
             Subsignal("a",     Pins(
                 "M20 M19 L20 L19 K20 K19 K18 J20",
@@ -122,6 +129,7 @@ def io():
             Subsignal("cke",   Pins("F21")),
             Subsignal("ba",    Pins("P19 N20")),
             Subsignal("dm",    Pins("U19 E20")),
+            Subsignal("clock",    Pins("F19")),
             IOStandard("LVCMOS33"),
             Misc("SLEWRATE=FAST"),
         ),
@@ -136,7 +144,7 @@ def io():
     _io.append( make_gpio("gpio", 0, n_gpio) )
 
     # EINT: 3 pins
-    _io.append( ("eint", 0, Pins("E0 E1 E2"), IOStandard("LVCMOS33")) )
+    _io.append(make_eint("eint", 0))
 
     # UART0: 2 pins
     _io.append(make_uart("uart", 0))
@@ -146,7 +154,7 @@ def io():
     # not connected - eurgh have to adjust this to match the total pincount.
     num_nc = 24
     num_nc += 4 # mspi1 comments out, litex problems 25mar2021
-    #num_nc += 6 # sd0 comments out, litex problems 25mar2021
+    num_nc += 6 # sd0 comments out, litex problems 25mar2021
     num_nc += 2 # pwm comments out, litex problems 25mar2021
     nc = ' '.join("NC%d" % i for i in range(num_nc))
     _io.append(("nc", 0, Pins(nc), IOStandard("LVCMOS33")))

@@ -61,12 +61,14 @@ def make_jtag_ioconn(res, pin, cpupads, iopads):
     (fn, pin, iotype, pin_name, scan_idx) = pin
     #serial_tx__core__o, serial_rx__pad__i,
     # special-case sdram_clock
-    if pin == 'clock' and fn == 'sdr':
-        cpu = cpupads['sdram_clock']
-        io = iopads['sdram_clock']
-    else:
-        cpu = cpupads[fn]
-        io = iopads[fn]
+    #if pin == 'clock' and fn == 'sdr':
+    #    cpu = cpupads['sdram_clock']
+    #    io = iopads['sdram_clock']
+    #else:
+    #    cpu = cpupads[fn]
+    #    io = iopads[fn]
+    cpu = cpupads[fn]
+    io = iopads[fn]
     print ("make_jtag_ioconn", scan_idx)
     print ("cpupads", cpupads)
     print ("iopads", iopads)
@@ -79,21 +81,22 @@ def make_jtag_ioconn(res, pin, cpupads, iopads):
 
     if iotype in (IOType.In, IOType.Out):
         ps = pin.split("_")
-        if pin == 'clock' and fn == 'sdr':
-            cpup = cpu
-            iop = io
-        elif len(ps) == 2 and ps[-1].isdigit():
+        #if pin == 'clock' and fn == 'sdr':
+        #    cpup = cpu
+        #    iop = io
+        if len(ps) == 2 and ps[-1].isdigit():
             pin, idx = ps
             idx = int(idx)
             print ("ps split", pin, idx)
             cpup = getattr(cpu, pin)[idx]
             iop = getattr(io, pin)[idx]
-        elif pin.isdigit():
+        elif pin.isdigit() and fn != 'eint':
             idx = int(pin)
             print ("digit", idx)
             cpup = cpu[idx]
             iop = io[idx]
         else:
+            print ("attr", cpu)
             cpup = getattr(cpu, pin)
             iop = getattr(io, pin)
 
@@ -328,12 +331,12 @@ class LibreSoC(CPU):
                 litexmap[origperiph] = (periph, num)
                 self.cpupads[origperiph] = self.pad_cm.request(periph, num)
                 iopads[origperiph] = platform.request(periph, num)
-                if periph == 'sdram':
-                    # special-case sdram clock
-                    ck = self.pad_cm.request("sdram_clock")
-                    self.cpupads['sdram_clock'] = ck
-                    ck = platform.request("sdram_clock")
-                    iopads['sdram_clock'] = ck
+                #if periph == 'sdram':
+                #    # special-case sdram clock
+                #    ck = self.pad_cm.request("sdram_clock")
+                #    self.cpupads['sdram_clock'] = ck
+                #    ck = platform.request("sdram_clock")
+                #    iopads['sdram_clock'] = ck
 
             pinset = get_pinspecs(subset=subset)
             p = Pins(pinset)
