@@ -362,7 +362,7 @@ class LibreSoCSim(SoCCore):
             cpu_type                 = "microwatt",
             cpu_cls                  = LibreSoC   if cpu == "libresoc" \
                                        else Microwatt,
-            bus_data_width           = 64,
+            #bus_data_width           = 64, # don't add this! stops conversion
             csr_address_width        = 14, # limit to 0x8000
             cpu_variant              = variant,
             csr_data_width            = 8,
