@@ -60,11 +60,11 @@ class LibreSoCSim(SoCSDRAM):
         ram_fname = None
 
         # reserve XICS ICP and XICS memory addresses.
-        self.mem_map['icp'] = 0xc0004000
-        self.mem_map['ics'] = 0xc0005000
+        self.mem_map['xicsicp'] = 0xc0004000
+        self.mem_map['xicsics'] = 0xc0005000
         self.mem_map['gpio'] = 0xc0007000
-        #self.csr_map["icp"] = 8  #  8 x 0x800 == 0x4000
-        #self.csr_map["ics"] = 10 # 10 x 0x800 == 0x5000
+        #self.csr_map["xicsicp"] = 8  #  8 x 0x800 == 0x4000
+        #self.csr_map["xicsics"] = 10 # 10 x 0x800 == 0x5000
 
         ram_init = []
         if ram_fname:
@@ -107,15 +107,15 @@ class LibreSoCSim(SoCSDRAM):
 
         if cpu == "libresoc":
             # XICS interrupt devices
-            icp_addr = self.mem_map['icp']
+            icp_addr = self.mem_map['xicsicp']
             icp_wb = self.cpu.xics_icp
             icp_region = SoCRegion(origin=icp_addr, size=0x20, cached=False)
-            self.bus.add_slave(name='icp', slave=icp_wb, region=icp_region)
+            self.bus.add_slave(name='xicsicp', slave=icp_wb, region=icp_region)
 
-            ics_addr = self.mem_map['ics']
+            ics_addr = self.mem_map['xicsics']
             ics_wb = self.cpu.xics_ics
             ics_region = SoCRegion(origin=ics_addr, size=0x1000, cached=False)
-            self.bus.add_slave(name='ics', slave=ics_wb, region=ics_region)
+            self.bus.add_slave(name='xicsics', slave=ics_wb, region=ics_region)
 
         if "gpio" in variant:
             # Simple GPIO peripheral
