@@ -15,6 +15,7 @@ from litex.build.generic_platform import ConstraintManager
 
 CPU_VARIANTS = ["standard", "standard32", "standardjtag",
                 "standardjtagtestgpio", "ls180", "ls180sram4k",
+                "ls180nopll",
                 "standardjtagnoirq"]
 
 
@@ -269,7 +270,7 @@ class LibreSoC(CPU):
             ))
 
         # add clock select, pll output
-        if "ls180" in variant:
+        if "ls180" in variant and "pll" not in variant:
             self.pll_18_o = Signal()
             self.clk_sel = Signal(2)
             self.pll_lck_o = Signal()

@@ -315,7 +315,7 @@ class LibreSoCSim(SoCCore):
         #cpu_data_width = 32
         cpu_data_width = 64
 
-        variant = "ls180"
+        variant = "ls180nopll"
 
         # reserve XICS ICP and XICS memory addresses.
         self.mem_map['icp']  = 0xc0010000
@@ -418,14 +418,15 @@ class LibreSoCSim(SoCCore):
         self.submodules.crg = CRG(platform.request("sys_clk"),
                                   platform.request("sys_rst"))
 
-        # PLL/Clock Select
-        clksel_i = platform.request("sys_clksel_i")
-        pll18_o = platform.request("sys_pll_18_o")
-        pll_lck_o = platform.request("sys_pll_lck_o")
+        if hasattr(self.cpu, "clk_sel"):
+            # PLL/Clock Select
+            clksel_i = platform.request("sys_clksel_i")
+            pll18_o = platform.request("sys_pll_18_o")
+            pll_lck_o = platform.request("sys_pll_lck_o")
 
-        self.comb += self.cpu.clk_sel.eq(clksel_i) # allow clock src select
-        self.comb += pll18_o.eq(self.cpu.pll_18_o) # "test feed" from the PLL
-        self.comb += pll_lck_o.eq(self.cpu.pll_lck_o) # PLL lock flag
+            self.comb += self.cpu.clk_sel.eq(clksel_i) # allow clock src select
+            self.comb += pll18_o.eq(self.cpu.pll_18_o) # "test feed" from PLL
+            self.comb += pll_lck_o.eq(self.cpu.pll_lck_o) # PLL lock flag
 
         #ram_init = []
 
