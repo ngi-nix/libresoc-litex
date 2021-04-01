@@ -28,7 +28,9 @@ def setup_jtag(dut, *, tck_period):
     # Make this a generator
     if False:
         yield Timer(0)
-    return JTAG_Master(dut.jtag_tck, dut.jtag_tms, dut.jtag_tdi, dut.jtag_tdo, clk_period=tck_period)
+    return JTAG_Master(dut.jtag_tck, dut.jtag_tms,
+                       dut.jtag_tdi, dut.jtag_tdo,
+                       clk_period=tck_period)
 
 def execute_svf(dut, *, jtag, svf_filename):
     jtag_svf = SVF_Executor(jtag)
