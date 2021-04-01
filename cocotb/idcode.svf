@@ -1,0 +1,7 @@
+HIR 5 TDI (1f) SMASK (1f) ;
+TDR 0 ;
+
+!Loading device with 'idcode' instruction.
+SIR 4 TDI (1) SMASK (f) ;
+SDR 32 TDI (00000000) TDO (000018ff) ;
+
