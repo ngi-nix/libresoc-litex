@@ -9,6 +9,7 @@ simulators, run scripts are provided that call the Makefile:
 # Dependency
 
 * cocotb: `pip install cocotb`
+* c4m-jtag: install according to HDL workflow
 * iverilog: `apt install iverilog`
 * `../libresoc.v`, `../ls180.v`: run `make ls180_verilog` in soc directory,
   `make ls180` in parent directory.  
