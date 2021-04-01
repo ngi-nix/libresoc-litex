@@ -30,7 +30,8 @@ def setup_jtag(dut, *, tck_period):
         yield Timer(0)
     return JTAG_Master(dut.jtag_tck, dut.jtag_tms,
                        dut.jtag_tdi, dut.jtag_tdo,
-                       clk_period=tck_period)
+                       clk_period=tck_period,
+                       ir_width=4)
 
 def execute_svf(dut, *, jtag, svf_filename):
     jtag_svf = SVF_Executor(jtag)
@@ -43,7 +44,6 @@ def execute_svf(dut, *, jtag, svf_filename):
 #
 
 def idcode(dut, *, jtag):
-    jtag.IDCODE = [0, 0, 0, 1]
     yield jtag.idcode()
     result1 = jtag.result
     dut._log.info("IDCODE1: {}".format(result1))
