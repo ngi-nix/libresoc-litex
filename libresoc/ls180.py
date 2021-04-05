@@ -104,7 +104,7 @@ def io():
             Subsignal("cmd_oe",  Pins("J3"), Misc("PULLMODE=UP")),
             Subsignal("data_i", Pins("K2 K1 H2 H1"), Misc("PULLMODE=UP")),
             Subsignal("data_o", Pins("K2 K1 H2 H1"), Misc("PULLMODE=UP")),
-            Subsignal("data_oe", Pins("K2"), Misc("PULLMODE=UP")),
+            Subsignal("data_oe", Pins("K2 K1 H2 H1"), Misc("PULLMODE=UP")),
             Misc("SLEWRATE=FAST"),
             IOStandard("LVCMOS33"),
         ),
@@ -121,7 +121,10 @@ def io():
             Subsignal("dq_o",    Pins(
                 "J16 L18 M18 N18 P18 T18 T17 U20",
                 "E19 D20 D19 C20 E18 F18 J18 J17")),
-            Subsignal("dq_oe",    Pins("J17")),
+            # ASIC pads all need an OE driver
+            Subsignal("dq_oe",    Pins(
+                "J16 L18 M18 N18 P18 T18 T17 U20",
+                "E19 D20 D19 C20 E18 F18 J18 J17")),
             Subsignal("we_n",  Pins("T20")),
             Subsignal("ras_n", Pins("R20")),
             Subsignal("cas_n", Pins("T19")),

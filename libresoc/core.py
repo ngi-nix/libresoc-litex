@@ -118,11 +118,11 @@ def make_jtag_ioconn(res, pin, cpupads, iopads):
             pfx = ''
         elif fn.startswith('sd') and pin.startswith('data'):
             idx = int(pin[-1])
-            oe_idx = 0
+            oe_idx = idx
             pfx = pin[:-1]+"_"
         elif fn == 'sdr':
             idx = int(pin.split('_')[-1])
-            oe_idx = 0
+            oe_idx = idx
             pfx = pin.split('_')[0]+"_"
         else:
             idx = 0

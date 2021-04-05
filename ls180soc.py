@@ -142,8 +142,8 @@ class SDRPad(Module):
         _o = getattr(pad, "%s_o" % name)
         _oe = getattr(pad, "%s_oe" % name)
         _i = getattr(pad, "%s_i" % name)
-        self.specials += SDROutput(clk=clk, i=oe, o=_oe)
         for j in range(len(_o)):
+            self.specials += SDROutput(clk=clk, i=oe, o=_oe[j])
             self.specials += SDROutput(clk=clk, i=o[j], o=_o[j])
             self.specials += SDRInput(clk=clk, i=_i[j], o=i[j])
 
