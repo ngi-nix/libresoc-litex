@@ -206,7 +206,7 @@ class LibreSoC(CPU):
         if "testgpio" in variant:
             self.simple_gpio = gpio = wb.Interface(data_width=32, adr_width=30)
         if jtag_en:
-            self.jtag_wb = jtag_wb = wb.Interface(data_width=64, adr_width=29)
+            self.jtag_wb = jtag_wb = wb.Interface(data_width=32, adr_width=30)
 
         self.srams = srams = []
         if "sram4k" in variant:
@@ -238,7 +238,7 @@ class LibreSoC(CPU):
             i_rst              = ResetSignal() | self.reset,
 
             # Monitoring / Debugging
-            i_pc_i             = 0,
+            i_pc_i             = Signal(64),
             i_pc_i_ok          = 0,
             i_core_bigendian_i = 0, # Signal(),
             o_busy_o           = Signal(),   # not connected
