@@ -427,12 +427,12 @@ class LibreSoCSim(SoCCore):
         if hasattr(self.cpu, "clk_sel"):
             # PLL/Clock Select
             clksel_i = platform.request("sys_clksel_i")
-            pll18_o = platform.request("sys_pll_18_o")
-            pll_lck_o = platform.request("sys_pll_lck_o")
+            pll18_o = platform.request("sys_pll_testout_o")
+            pll_ana_o = platform.request("sys_pll_vco_o")
 
             self.comb += self.cpu.clk_sel.eq(clksel_i) # allow clock src select
             self.comb += pll18_o.eq(self.cpu.pll_18_o) # "test feed" from PLL
-            self.comb += pll_lck_o.eq(self.cpu.pll_lck_o) # PLL lock flag
+            self.comb += pll_ana_o.eq(self.cpu.pll_ana_o) # PLL lock flag
 
         #ram_init = []
 
