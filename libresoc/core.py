@@ -273,7 +273,7 @@ class LibreSoC(CPU):
             self.pll_18_o = Signal()
             self.clk_sel = Signal(2)
             self.pll_ana_o = Signal()
-            self.cpu_params['i_clk__i'] = self.clk_sel
+            self.cpu_params['i_clk_sel_i'] = self.clk_sel
             self.cpu_params['o_pll_18_o'] = self.pll_18_o
             self.cpu_params['o_vco_test_ana_o'] = self.pll_ana_o
 
