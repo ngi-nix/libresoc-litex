@@ -324,8 +324,8 @@ class LibreSoCSim(SoCCore):
         print ("CPU, variant", platform_name, variant)
 
         # reserve XICS ICP and XICS memory addresses.
-        self.mem_map['icp']  = 0xc0010000
-        self.mem_map['ics']  = 0xc0011000
+        self.mem_map['xics_icp']  = 0xc0010000
+        self.mem_map['xics_ics']  = 0xc0011000
         #self.csr_map["icp"] = 8  #  8 x 0x800 == 0x4000
         #self.csr_map["ics"] = 10 # 10 x 0x800 == 0x5000
 
@@ -403,12 +403,12 @@ class LibreSoCSim(SoCCore):
 
         if cpu == "libresoc":
             # XICS interrupt devices
-            icp_addr = self.mem_map['icp']
+            icp_addr = self.mem_map['xics_icp']
             icp_wb = self.cpu.xics_icp
             icp_region = SoCRegion(origin=icp_addr, size=0x20, cached=False)
             self.bus.add_slave(name='icp', slave=icp_wb, region=icp_region)
 
-            ics_addr = self.mem_map['ics']
+            ics_addr = self.mem_map['xics_ics']
             ics_wb = self.cpu.xics_ics
             ics_region = SoCRegion(origin=ics_addr, size=0x1000, cached=False)
             self.bus.add_slave(name='ics', slave=ics_wb, region=ics_region)
