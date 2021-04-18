@@ -5,11 +5,6 @@ from migen import ClockSignal, ResetSignal, Signal, Instance, Cat
 from litex.soc.interconnect import wishbone as wb
 from litex.soc.cores.cpu import CPU
 
-from soc.config.pinouts import get_pinspecs
-from soc.debug.jtag import Pins
-from c4m.nmigen.jtag.tap import IOType
-
-from libresoc.ls180 import io
 from litex.build.generic_platform import ConstraintManager
 
 
@@ -59,6 +54,10 @@ def get_field(rec, name):
 
 
 def make_jtag_ioconn(res, pin, cpupads, iopads):
+    # XXX normally this is NOT done, however to avoid import problems
+    # in litex, move the import into where it is optionally called
+    from c4m.nmigen.jtag.tap import IOType
+
     (fn, pin, iotype, pin_name, scan_idx) = pin
     #serial_tx__core__o, serial_rx__pad__i,
     # special-case sdram_clock
@@ -299,8 +298,17 @@ class LibreSoC(CPU):
         self.cpu_params['i_dbus__bte'] = 0
 
         if "ls180" in variant:
+            # XXX normally this is NOT done, however to avoid import problems
+            # in litex, move the import into where it is optionally called
+            # then, for non-ls180 platforms, huge numbers of dependencies
+            # behind these simple-looking imports are not needed
+            from soc.config.pinouts import get_pinspecs
+            from soc.debug.jtag import Pins
+            from libresoc.ls180 import io
+
             # urr yuk.  have to expose iopads / pins from core to litex
-            # then back again.  cut _some_ of that out by connecting
+            # then back again.  cut _some_ of that out by connecting up
+            # padresources.  this mirrors what is done inside litex
             self.padresources = io()
             self.pad_cm = ConstraintManager(self.padresources, [])
             self.cpupads = {}
@@ -339,6 +347,10 @@ class LibreSoC(CPU):
                 #    ck = platform.request("sdram_clock")
                 #    iopads['sdram_clock'] = ck
 
+            # for the 180nm ASIC, obtain the pinspecs so that JTAG can be
+            # routed in and back out again.  litex is such hell (migen)
+            # that trying to create an auto-generated boundary scan in
+            # migen is just not sane.
             pinset = get_pinspecs(subset=subset)
             p = Pins(pinset)
             for pin in list(p):
