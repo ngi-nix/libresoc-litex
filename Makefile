@@ -4,6 +4,7 @@ ls1804k:
 	cp build/ls180sram4k/gateware/mem.init .
 	cp build/ls180sram4k/gateware/mem_1.init .
 	cp libresoc/libresoc.v .
+	cp libresoc/SPBlock_512W64B8W.v .
 	yosys -p 'read_verilog libresoc.v' \
           -p 'write_ilang libresoc_cvt.il'
 	yosys -p 'read_verilog ls180.v' \
@@ -19,6 +20,7 @@ ls180:
 	cp build/ls180/gateware/mem.init .
 	cp build/ls180/gateware/mem_1.init .
 	cp libresoc/libresoc.v .
+	cp libresoc/SPBlock_512W64B8W.v .
 	yosys -p 'read_verilog libresoc.v' \
 	      -p 'read_verilog ls180.v' \
 	      -p 'proc' \

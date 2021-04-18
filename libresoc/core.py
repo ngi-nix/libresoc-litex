@@ -368,6 +368,7 @@ class LibreSoC(CPU):
     def add_sources(platform):
         cdir = os.path.dirname(__file__)
         platform.add_source(os.path.join(cdir, "libresoc.v"))
+        platform.add_source(os.path.join(cdir, "SPBlock_512W64B8W.v"))
 
     def do_finalize(self):
         self.specials += Instance("test_issuer", **self.cpu_params)
