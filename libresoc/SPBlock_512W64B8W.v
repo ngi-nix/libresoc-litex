@@ -1,5 +1,5 @@
 (* blackbox = 1 *)
-module SPBlock_512W64B8W(input [8:0] a,
+module spblock_512w64b8w(input [8:0] a,
 			 input [63:0] d,
 			 output [63:0] q,
 			 input [7:0] we,
