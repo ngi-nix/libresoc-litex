@@ -1,5 +1,5 @@
 ls1804k:
-	./ls180soc.py --build --platform=ls180sram4k --num-srams=2
+	./ls180soc.py --build --platform=ls180sram4k --num-srams=2 --srams4k
 	cp build/ls180sram4k/gateware/ls180sram4k.v ./ls180.v
 	cp build/ls180sram4k/gateware/mem.init .
 	cp build/ls180sram4k/gateware/mem_1.init .
