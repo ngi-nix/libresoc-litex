@@ -43,6 +43,7 @@ from microwatt import Microwatt
 # HACK!
 from litex.soc.integration.soc import SoCCSRHandler
 SoCCSRHandler.supported_address_width.append(12)
+SoCCSRHandler.supported_address_width.append(13)
 
 # GPIO Tristate -------------------------------------------------------
 # doesn't work properly.
@@ -298,7 +299,7 @@ class LibreSoCSim(SoCCore):
             irq_reserved_irqs = {'uart': 0},
             platform='sim',
             dff_srams=5,
-            srams_4k=4,
+            srams_4k=False,
             ):
         assert cpu in ["libresoc", "microwatt"]
         sys_clk_freq = int(50e6)
@@ -315,7 +316,12 @@ class LibreSoCSim(SoCCore):
         #cpu_data_width = 32
         cpu_data_width = 64
 
-        variant = "ls180nopll"
+        if srams_4k:
+            variant = "ls180sram4k"
+        else:
+            variant = "ls180nopll"
+
+        print ("CPU, variant", platform_name, variant)
 
         # reserve XICS ICP and XICS memory addresses.
         self.mem_map['icp']  = 0xc0010000
@@ -363,7 +369,7 @@ class LibreSoCSim(SoCCore):
             cpu_cls                  = LibreSoC   if cpu == "libresoc" \
                                        else Microwatt,
             #bus_data_width           = 64, # don't add this! stops conversion
-            csr_address_width        = 14, # limit to 0x8000
+            csr_address_width        = 13, # limit to 0x8000
             cpu_variant              = variant,
             csr_data_width            = 8,
             l2_size             = 0,
@@ -871,14 +877,18 @@ def main():
                         help="Cycle to end FST tracing")
     parser.add_argument("--num-srams",    default=5,
                         help="number of srams")
+    parser.add_argument("--srams4k",    action="store_true",
+                        help="enable 4k srams")
     parser.add_argument("--build", action="store_true", help="Build bitstream")
     args = parser.parse_args()
 
     print ("number of SRAMs", args.num_srams)
+    print ("enable 4K SRAMs variant", args.srams4k)
 
     if 'ls180' in args.platform:
         soc = LibreSoCSim(cpu=args.cpu, debug=args.debug,
                           platform=args.platform,
+                          srams_4k=args.srams4k,
                           dff_srams=args.num_srams)
         builder = Builder(soc, compile_gateware = True)
         builder.build(run         = True)

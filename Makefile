@@ -21,6 +21,7 @@ ls180:
 	cp libresoc/libresoc.v .
 	yosys -p 'read_verilog libresoc.v' \
 	      -p 'read_verilog ls180.v' \
+	      -p 'proc' \
           -p 'write_verilog ls180_cvt.v'
 	yosys -p 'read_verilog ls180.v' \
 	      -p 'read_verilog SPBlock_512W64B8W.v' \

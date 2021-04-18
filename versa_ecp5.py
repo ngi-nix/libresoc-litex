@@ -14,6 +14,11 @@ from litex.soc.integration.builder import (Builder, builder_args,
 from libresoc import LibreSoC
 #from microwatt import Microwatt
 
+# HACK!
+from litex.soc.integration.soc import SoCCSRHandler
+SoCCSRHandler.supported_address_width.append(12)
+
+
 # TestSoC
 # ----------------------------------------------------------------------------
 
@@ -24,6 +29,7 @@ class VersaECP5TestSoC(versa_ecp5.BaseSoC):
         kwargs["integrated_rom_size"] = 0x10000
         #kwargs["integrated_main_ram_size"] = 0x1000
         kwargs["csr_data_width"] = 32
+        kwargs['csr_address_width'] = 12 # limit to 0x8000
         kwargs["l2_size"] = 0
         #bus_data_width = 16,
 
