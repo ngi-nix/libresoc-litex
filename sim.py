@@ -176,8 +176,19 @@ class LibreSoCSim(SoCSDRAM):
 
 
         # Debug ---------------------------------------------------------------
+        # (enable with ./sim.py --debug)
         if not debug:
             return
+
+        # In debug mode, the DMI interface is used to perform single-step
+        # and dump of the full register set (MSR, r0-r31, CR, XER, PC).
+        # by running the exact same program with microwatt and libre-soc
+        # a straight "diff -u" of the complete progress dumps can be done
+        # and therefore computation instruction discrepancies found immediately
+        # and easily, running at "verilator" speed.
+        #
+        # the FSM is a bit of a dog's dinner, it relies on the way that DMI
+        # works, sending requests at periodic intervals. needs work. DoesTheJob.
 
         # setup running of DMI FSM
         dmi_addr = Signal(4)
@@ -361,7 +372,7 @@ class LibreSoCSim(SoCSDRAM):
             )
         )
 
-        if cpu == "libresoc":
+        if cpu == "libresoc": # XXX TODO: waiting on microwatt upstream patch
             #self.comb += active_dbg_cr.eq((0x10300 <= pc) & (pc <= 0x12600))
             self.comb += active_dbg_cr.eq(0)
 
