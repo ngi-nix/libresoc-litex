@@ -1,5 +1,12 @@
 #!/usr/bin/env python3
 
+# Notes for "Debug" mode:
+# both microwatt and Libre-SOC implement (pretty much) the same DMI
+# interface.  TBD: really, there should be an OPF Debug SIG which
+# defines this properly. still, these two are interoperable.
+# https://git.libre-soc.org/?p=soc.git;a=blob;f=src/soc/debug/dmi.py
+# https://github.com/antonblanchard/microwatt/blob/master/core_debug.vhdl
+
 import os
 import argparse
 
