@@ -183,7 +183,7 @@ class LibreSoCSim(SoCSDRAM):
 
 
         # Debug ---------------------------------------------------------------
-        # (enable with ./sim.py --debug)
+        # (enable with ./sim.py --debug --variant=standard)
         if not debug:
             return
 
