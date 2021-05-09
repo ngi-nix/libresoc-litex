@@ -301,7 +301,10 @@ class LibreSoC(CPU):
             # XXX normally this is NOT done, however to avoid import problems
             # in litex, move the import into where it is optionally called
             # then, for non-ls180 platforms, huge numbers of dependencies
-            # behind these simple-looking imports are not needed
+            # behind these simple-looking imports are not needed.
+            # For normal FPGA usage ("standard" variants) you DO NOT need this.
+            # it is ONLY for ASICs, for managing JTAG TAP Boundary Scans.
+
             from soc.config.pinouts import get_pinspecs
             from soc.debug.jtag import Pins
             from libresoc.ls180 import io
