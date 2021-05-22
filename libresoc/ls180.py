@@ -155,11 +155,11 @@ def io():
     _io.append(make_uart("uart", 1))
 
     # not connected - eurgh have to adjust this to match the total pincount.
-    num_nc = 24
+    num_nc = 23
     num_nc += 4 # mspi1 comments out, litex problems 25mar2021
     num_nc += 6 # sd0 comments out, litex problems 25mar2021
     num_nc += 2 # pwm comments out, litex problems 25mar2021
-    num_nc += 4 # PLL disabled for now
+    #num_nc += 4 # PLL disabled for now
     nc = ' '.join("NC%d" % i for i in range(num_nc))
     _io.append(("nc", 0, Pins(nc), IOStandard("LVCMOS33")))
 
