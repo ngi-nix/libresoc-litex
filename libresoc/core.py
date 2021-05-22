@@ -272,7 +272,7 @@ class LibreSoC(CPU):
         if "ls180" in variant and "pll" not in variant:
             self.pll_vco_o = Signal()
             self.clk_sel = Signal(2)
-            self.pll_ana_o = Signal()
+            self.pll_test_o = Signal()
             self.cpu_params['i_clk_sel_i'] = self.clk_sel
             self.cpu_params['o_pll_vco_o'] = self.pll_vco_o
             self.cpu_params['o_pll_test_o'] = self.pll_test_o
