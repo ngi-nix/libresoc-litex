@@ -25,14 +25,17 @@ def make_wb_bus(prefix, obj, simple=False):
         res['i_%s__%s' % (prefix, i)] = getattr(obj, i)
     return res
 
-def make_wb_slave(prefix, obj, simple=False):
+def make_wb_slave(prefix, obj, simple=False, err=True):
     res = {}
     inpins = ['stb', 'cyc', 'we', 'adr', 'dat_w', 'sel']
     if not simple:
         inpins += ['cti', 'bte']
     for i in inpins:
         res['i_%s__%s' % (prefix, i)] = getattr(obj, i)
-    for o in ['ack', 'err', 'dat_r']:
+    outpins = ['ack', 'dat_r']
+    if err:
+        outpins.append('err')
+    for o in outpins:
         res['o_%s__%s' % (prefix, o)] = getattr(obj, o)
     return res
 
@@ -289,7 +292,8 @@ class LibreSoC(CPU):
         if "sram4k" in variant:
             for i, sram in enumerate(srams):
                 self.cpu_params.update(make_wb_slave("sram4k_%d_wb" % i,
-                                                     sram, simple=True))
+                                                     sram, simple=True,
+                                                     err=False))
 
         # and set ibus advanced tags to zero (disable)
         self.cpu_params['i_ibus__cti'] = 0
