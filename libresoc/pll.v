@@ -5,6 +5,6 @@ module pll(input [0:0] ref_v,
            output [0:0] vco_test_ana, 
            output [0:0] out_v);
   /* fake PLL */
-  assign out_v = ref;
+  assign out_v = ref_v;
 endmodule
 
