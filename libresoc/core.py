@@ -276,9 +276,11 @@ class LibreSoC(CPU):
             self.pll_vco_o = Signal()
             self.clk_sel = Signal(2)
             self.pll_test_o = Signal()
+            self.pllclk_o = Signal()
             self.cpu_params['i_clk_sel_i'] = self.clk_sel
             self.cpu_params['o_pll_vco_o'] = self.pll_vco_o
             self.cpu_params['o_pll_test_o'] = self.pll_test_o
+            self.cpu_params['o_pllclk_o'] = self.pllclk_o
 
         # add wishbone buses to cpu params
         self.cpu_params.update(make_wb_bus("ibus", ibus, True))

@@ -433,6 +433,7 @@ class LibreSoCSim(SoCCore):
             self.comb += self.cpu.clk_sel.eq(clksel_i) # allow clock src select
             self.comb += pll_test_o.eq(self.cpu.pll_test_o) # "test" from PLL
             self.comb += pll_vco_o.eq(self.cpu.pll_vco_o) # PLL lock flag
+            self.comb += self.cpu.clk.eq(self.cpu.pllclk_o) # PLL out into cpu
 
         #ram_init = []
 
