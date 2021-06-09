@@ -186,6 +186,7 @@ class LibreSoC(CPU):
         self.platform     = platform
         self.variant      = variant
         self.reset        = Signal()
+        self.clk          = ClockSignal()
 
         irq_en = "noirq" not in variant
 
@@ -236,7 +237,7 @@ class LibreSoC(CPU):
 
         self.cpu_params = dict(
             # Clock / Reset
-            i_clk              = ClockSignal(),
+            i_clk              = self.clk,
             i_rst              = ResetSignal() | self.reset,
 
             # Monitoring / Debugging
