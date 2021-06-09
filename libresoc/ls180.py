@@ -54,7 +54,7 @@ def make_gpio(name, num, n_gpio):
 def io():
     _io = [
         # CLK/RST: 2 pins
-        ("sys_clk", 0, Pins("G2"), IOStandard("LVCMOS33")),
+        ("sys_pllclk", 0, Pins("G2"), IOStandard("LVCMOS33")),
         ("sys_rst",   0, Pins("R1"), IOStandard("LVCMOS33")),
         ("sys_clksel_i",   0, Pins("R1 R2"), IOStandard("LVCMOS33")),
         ("sys_pll_testout_o",   0, Pins("R1"), IOStandard("LVCMOS33")),

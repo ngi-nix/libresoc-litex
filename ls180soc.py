@@ -6,7 +6,8 @@ from functools import reduce
 from operator import or_
 
 from migen import (Signal, FSM, If, Display, Finish, NextValue, NextState,
-                   Cat, Record, ClockSignal, wrap, ResetInserter)
+                   Cat, Record, ClockSignal, wrap, ResetInserter,
+                   ClockDomain, ResetSignal)
 
 from litex.build.generic_platform import Pins, Subsignal
 from litex.build.sim import SimPlatform
@@ -421,7 +422,10 @@ class LibreSoCSim(SoCCore):
                 self.bus.add_slave(name=name, slave=sram_wb, region=ics_region)
 
         # CRG -----------------------------------------------------------------
-        self.submodules.crg = CRG(platform.request("sys_clk"),
+        # power-on-reset still based on PLL, leave sys_rst HI until
+        # PLL stabilises
+        pll_clk = self.cpu.pllclk_o # PLL into cpu
+        self.submodules.crg = CRG(pll_clk,
                                   platform.request("sys_rst"))
 
         if hasattr(self.cpu, "clk_sel"):
@@ -433,8 +437,14 @@ class LibreSoCSim(SoCCore):
             self.comb += self.cpu.clk_sel.eq(clksel_i) # allow clock src select
             self.comb += pll_test_o.eq(self.cpu.pll_test_o) # "test" from PLL
             self.comb += pll_vco_o.eq(self.cpu.pll_vco_o) # PLL lock flag
-            cpu_clk = ClockDomain("cpu")
-            self.comb += cpu_clk.eq(self.cpu.pllclk_o) # PLL out into cpu
+            cd_cpu = ClockDomain()
+            cd_pll = ClockDomain("pll", reset_less=True)
+            self.clock_domains.cd_pll = cd_pll
+            sys_clk = platform.request("sys_pllclk") # incoming clock
+            self.comb += self.cpu.pll_24_i.eq(sys_clk)
+            self.comb += self.cd_pll.clk.eq(self.cpu.pllclk_o) # PLL into cpu
+            #self.comb += self.cd_cpu.rst.eq(ResetSignal())
+            #self.comb += self.cpu.cpu_clk.eq(cd_cpu.clk)
 
         #ram_init = []
 

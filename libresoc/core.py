@@ -186,7 +186,7 @@ class LibreSoC(CPU):
         self.platform     = platform
         self.variant      = variant
         self.reset        = Signal()
-        self.clk          = ClockSignal("cpu")
+        self.cpu_clk          = ClockSignal()
 
         irq_en = "noirq" not in variant
 
@@ -237,7 +237,7 @@ class LibreSoC(CPU):
 
         self.cpu_params = dict(
             # Clock / Reset
-            i_clk              = self.clk,
+            i_clk              = self.cpu_clk,
             i_rst              = ResetSignal() | self.reset,
 
             # Monitoring / Debugging
@@ -277,11 +277,13 @@ class LibreSoC(CPU):
             self.pll_vco_o = Signal()
             self.clk_sel = Signal(2)
             self.pll_test_o = Signal()
-            self.pllclk_o = Signal()
+            self.pll_24_i = Signal()
+            self.pllclk_o = ClockSignal("pll")
             self.cpu_params['i_clk_sel_i'] = self.clk_sel
+            self.cpu_params['i_clk_24_i'] = self.pll_24_i
             self.cpu_params['o_pll_vco_o'] = self.pll_vco_o
             self.cpu_params['o_pll_test_o'] = self.pll_test_o
-            self.cpu_params['o_pllclk_o'] = self.pllclk_o
+            self.cpu_params['o_pllclk_clk'] = self.pllclk_o
 
         # add wishbone buses to cpu params
         self.cpu_params.update(make_wb_bus("ibus", ibus, True))
