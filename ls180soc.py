@@ -26,6 +26,7 @@ from litedram.phy.model import SDRAMPHYModel
 from litedram.common import PHYPadsCombiner, PhySettings
 from litedram.phy.dfi import Interface as DFIInterface
 from litex.soc.cores.spi import SPIMaster
+from litex.soc.cores.bitbang import SPIMaster as SPIMasterBitbang
 from litex.soc.cores.pwm import PWM
 #from litex.soc.cores.bitbang import I2CMaster
 from litex.soc.cores import uart
@@ -517,19 +518,22 @@ class LibreSoCSim(SoCCore):
 
         # SPI Master
         print ("cpupadkeys", self.cpu.cpupads.keys())
-        if hasattr(self.cpu.cpupads, 'mspi0'):
-            sd_clk_freq = 8e6
+        if 'mspi0' in self.cpu.cpupads:
             pads = self.cpu.cpupads['mspi0']
-            spimaster = SPIMaster(pads, 8, self.sys_clk_freq, sd_clk_freq)
-            spimaster.add_clk_divider()
+            if False: # XXX needs to be greater than 1-bit wide, use bitbang
+                sd_clk_freq = 8e6
+                spimaster = SPIMaster(pads, 4, self.sys_clk_freq, sd_clk_freq)
+                spimaster.add_clk_divider()
+            else:
+                spimaster = SPIMasterBitbang(pads)
             setattr(self.submodules, 'spimaster', spimaster)
             self.add_csr('spimaster')
 
-        if hasattr(self.cpu.cpupads, 'mspi1'):
+        if 'mspi1' in self.cpu.cpupads:
             # SPI SDCard (1 wide)
             spi_clk_freq = 400e3
             pads = self.cpu.cpupads['mspi1']
-            spisdcard = SPIMaster(pads, 8, self.sys_clk_freq, spi_clk_freq)
+            spisdcard = SPIMaster(pads, 2, self.sys_clk_freq, spi_clk_freq)
             spisdcard.add_clk_divider()
             setattr(self.submodules, 'spisdcard', spisdcard)
             self.add_csr('spisdcard')
