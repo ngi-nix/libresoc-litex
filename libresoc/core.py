@@ -157,7 +157,7 @@ class LibreSoC(CPU):
     human_name           = "Libre-SoC"
     variants             = CPU_VARIANTS
     endianness           = "little"
-    gcc_triple           = ("powerpc64le-linux", "powerpc64le-linux-gnu")
+    gcc_triple           = ("powerpc64le-linux", "powerpc64le-linux-gnu", "powerpc64le-unknown-linux-gnu")
     linker_output_format = "elf64-powerpcle"
     nop                  = "nop"
     io_regions           = {0xc0000000: 0x10000000} # origin, length
