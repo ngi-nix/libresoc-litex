@@ -2,6 +2,7 @@
 
 import os
 import argparse
+import sys
 
 import litex_boards.targets.versa_ecp5 as versa_ecp5
 import litex_boards.targets.ulx3s as ulx3s
@@ -120,6 +121,7 @@ def main():
                         help="System clock frequency (default=16MHz)")
     parser.add_argument("--fpga", default="versa_ecp5", help="FPGA target " \
                         "to build for/load to")
+    parser.add_argument("--load-from", default=None, help="svf to load, disables build")
 
     builder_args(parser)
     soc_sdram_args(parser)
@@ -137,13 +139,20 @@ def main():
         soc = VersaECP5TestSoC(sys_clk_freq=int(float(args.sys_clk_freq)),
                                **soc_sdram_argdict(args))
 
-    builder = Builder(soc, **builder_argdict(args))
-    builder.build(run=args.build)
+    if args.load_from == None:
+        builder = Builder(soc, **builder_argdict(args))
+        builder.build(run=args.build)
 
-    if args.load:
+        if args.load:
+            prog = soc.platform.create_programmer()
+            prog.load_bitstream(os.path.join(builder.gateware_dir,
+                                           soc.build_name + ".svf"))
+    else:
+        if args.load or args.build:
+            print("--load-from is incompatible with --load and --build", file=sys.stderr)
+            sys.exit(1)
         prog = soc.platform.create_programmer()
-        prog.load_bitstream(os.path.join(builder.gateware_dir,
-                                         soc.build_name + ".svf"))
+        prog.load_bitstream(args.load_from)
 
 if __name__ == "__main__":
     main()
